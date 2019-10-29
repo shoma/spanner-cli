@@ -5,7 +5,7 @@ A Terminal Client for Google Cloud Spanner with Completion and Syntax Highlighti
 Quick Start
 -----------
 ```
-pip3 install -U --user git+ssh://git@github.com/shoma/spanner-cli
+pip3 install -U --user spanner-cli
 ```
 
 ### Usage
