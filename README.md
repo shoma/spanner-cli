@@ -1,4 +1,6 @@
 # spanner-cli
+[![image](https://img.shields.io/pypi/v/spanner-cli.svg)](https://python.org/pypi/spanner-cli)
+[![image](https://img.shields.io/pypi/l/spanner-cli.svg)](https://python.org/pypi/spanner-cli)
 
 A Terminal Client for [Google Cloud Spanner](https://cloud.google.com/spanner/) with Completion and Syntax Highlighting.
 
