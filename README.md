@@ -1,6 +1,6 @@
 # spanner-cli
 
-A Terminal Client for Google Cloud Spanner with Completion and Syntax Highlighting.
+A Terminal Client for [Google Cloud Spanner](https://cloud.google.com/spanner/) with Completion and Syntax Highlighting.
 
 Quick Start
 -----------
