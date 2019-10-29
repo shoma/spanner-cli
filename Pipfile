@@ -1,0 +1,24 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+flake8 = "*"
+pytest = "*"
+autopep8 = "*"
+pylint = "*"
+
+[packages]
+google-cloud-spanner = "*"
+prompt-toolkit = "*"
+cli-helpers = "*"
+pygments = "*"
+spanner-cli = {path = ".",editable = true}
+
+[scripts]
+start = "python -m spannercli.main"
+test = "python -m pytest"
+pylint ="pylint spannercli"
+lint = "flake8 show-source ."
+fmt = "autopep8 -ivr ."
