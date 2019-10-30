@@ -54,6 +54,18 @@ def test_find_command():
     cmd = commands.find("browse")
     assert type(cmd) is commands.BrowserCommand
 
+    # double words
+    cmd = commands.find("show index")
+    assert type(cmd) is commands.ShowIndexCommand
+
+    # double words with mixed case
+    cmd = commands.find("show INDEX")
+    assert type(cmd) is commands.ShowIndexCommand
+
+    # double words with extra space
+    cmd = commands.find(" show  index ")
+    assert type(cmd) is commands.ShowIndexCommand
+
     # BrowserCommand is case sensitive
     with pytest.raises(commands.CommandNotFound):
         commands.find("BrOwSE")

@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 from typing import List, Optional
+import re
 import webbrowser
 
 from google.api_core import exceptions as googleExceptions
@@ -212,7 +213,7 @@ class ShowIndexCommand(Command):
               " LEFT JOIN INFORMATION_SCHEMA.INDEXES i ON c.INDEX_NAME= i.INDEX_NAME "\
               " WHERE c.TABLE_CATALOG = '' AND c.TABLE_SCHEMA = ''"
 
-        if table != "INDEX":
+        if table.upper() != "INDEX":
             sql = sql + " AND c.TABLE_NAME='{0}' AND i.TABLE_NAME = '{0}'"
         sql = sql + " ORDER BY INDEX_NAME ASC, c.ORDINAL_POSITION ASC;"
         return cli.query(sql.format(table))
@@ -305,11 +306,15 @@ def execute(cli, text: str) -> ResultContainer:
     return command.handler(cli, **kwargs)
 
 
+spaces = re.compile(r"\s+")
+
+
 def find(text: str) -> Command:
     if not text:
         raise CommandNotFound
 
     # 1st, search by raw input
+    text = re.sub(spaces, " ", text)
     text = clean(text)
     found = find_command(text)
     if found is not None:

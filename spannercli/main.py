@@ -111,6 +111,7 @@ class SpannerCli(object):
         self.prompt_message = self.get_prompt_message()
 
     def query(self, sql) -> structures.ResultContainer:
+        self.logger.debug("QUERY: %s", sql)
         if queryutils.is_write_query(sql):
             return self.write_query(sql)
         if queryutils.is_ddl_query(sql):
