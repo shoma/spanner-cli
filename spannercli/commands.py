@@ -208,14 +208,14 @@ class ShowIndexCommand(Command):
         table = find_last_word(query)
         # https://cloud.google.com/spanner/docs/information-schema
         sql = "SELECT c.TABLE_NAME, c.INDEX_NAME, c.INDEX_TYPE, c.COLUMN_NAME, c.SPANNER_TYPE, c.IS_NULLABLE,"\
-              " c.COLUMN_ORDERING, i.IS_UNIQUE, i.IS_NULL_FILTERED, i.INDEX_STATE, i.PARENT_TABLE_NAME"\
-              " FROM INFORMATION_SCHEMA.INDEX_COLUMNS c "\
-              " LEFT JOIN INFORMATION_SCHEMA.INDEXES i ON c.INDEX_NAME= i.INDEX_NAME "\
-              " WHERE c.TABLE_CATALOG = '' AND c.TABLE_SCHEMA = ''"
+              " c.COLUMN_ORDERING, i.PARENT_TABLE_NAME, i.IS_UNIQUE, i.IS_NULL_FILTERED, i.INDEX_STATE"\
+              " FROM INFORMATION_SCHEMA.INDEX_COLUMNS c"\
+              " LEFT JOIN INFORMATION_SCHEMA.INDEXES i ON c.TABLE_NAME = i.TABLE_NAME AND i.INDEX_NAME = c.INDEX_NAME"\
+              " WHERE c.TABLE_SCHEMA='' AND c.TABLE_SCHEMA=''"
 
         if table.upper() != "INDEX":
             sql = sql + " AND c.TABLE_NAME='{0}' AND i.TABLE_NAME = '{0}'"
-        sql = sql + " ORDER BY INDEX_NAME ASC, c.ORDINAL_POSITION ASC;"
+        sql = sql + " ORDER BY c.TABLE_NAME, c.INDEX_NAME ASC, c.ORDINAL_POSITION ASC;"
         return cli.query(sql.format(table))
 
     def help_message(self) -> List[str]:
