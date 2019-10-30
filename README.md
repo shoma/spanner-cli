@@ -9,6 +9,10 @@ Quick Start
 ```
 pip3 install -U --user spanner-cli
 ```
+or, for the latest develop version
+```
+pip3 install -U --user git+https://github.com/shoma/spanner-cli
+```
 
 ### Usage
 ```
