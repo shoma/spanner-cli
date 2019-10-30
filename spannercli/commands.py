@@ -168,12 +168,8 @@ class DescribeTable(Command):
             return ResultContainer(data=[], header=[], message="Missing table name.")
 
         table = find_last_word(query)
-        sql = "SELECT t.COLUMN_NAME, t.SPANNER_TYPE, t.IS_NULLABLE, t.COLUMN_DEFAULT, "\
-              "i.INDEX_NAME, i.INDEX_TYPE, i.COLUMN_ORDERING "\
-              "FROM INFORMATION_SCHEMA.COLUMNS t "\
-              "LEFT JOIN INFORMATION_SCHEMA.INDEX_COLUMNS i "\
-              "ON t.COLUMN_NAME =i.COLUMN_NAME  AND t.TABLE_NAME = i.TABLE_NAME "\
-              "WHERE t.TABLE_NAME = '{0}' ORDER BY t.ORDINAL_POSITION ASC;"
+        sql = "SELECT COLUMN_NAME, SPANNER_TYPE, COLUMN_DEFAULT, IS_NULLABLE  FROM INFORMATION_SCHEMA.COLUMNS t"\
+              " WHERE t.TABLE_NAME = '{0}' ORDER BY ORDINAL_POSITION ASC;"
         return cli.query(sql.format(table))
 
     def help_message(self) -> List[str]:
@@ -209,7 +205,8 @@ class ShowIndexCommand(Command):
     def handler(self, cli, **kwargs) -> Optional[ResultContainer]:
         query = clean(kwargs.get("text"))
         table = find_last_word(query)
-        sql = "SELECT * FROM INFORMATION_SCHEMA.INDEXES WHERE TABLE_CATALOG='' AND TABLE_SCHEMA =''"
+        sql = "SELECT TABLE_NAME, INDEX_NAME, INDEX_TYPE, PARENT_TABLE_NAME, IS_UNIQUE, IS_NULL_FILTERED, INDEX_STATE"\
+              " FROM INFORMATION_SCHEMA.INDEXES WHERE TABLE_CATALOG='' AND TABLE_SCHEMA =''"
 
         if table != "INDEX":
             sql = sql + " AND TABLE_NAME='{0}';".format(table)
