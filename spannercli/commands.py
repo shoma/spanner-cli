@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 from typing import List, Optional
+import re
 import webbrowser
 
 from google.api_core import exceptions as googleExceptions
@@ -205,11 +206,16 @@ class ShowIndexCommand(Command):
     def handler(self, cli, **kwargs) -> Optional[ResultContainer]:
         query = clean(kwargs.get("text"))
         table = find_last_word(query)
-        sql = "SELECT TABLE_NAME, INDEX_NAME, INDEX_TYPE, PARENT_TABLE_NAME, IS_UNIQUE, IS_NULL_FILTERED, INDEX_STATE"\
-              " FROM INFORMATION_SCHEMA.INDEXES WHERE TABLE_CATALOG='' AND TABLE_SCHEMA =''"
+        # https://cloud.google.com/spanner/docs/information-schema
+        sql = "SELECT c.TABLE_NAME, c.INDEX_NAME, c.INDEX_TYPE, c.COLUMN_NAME, c.SPANNER_TYPE, c.IS_NULLABLE,"\
+              " c.COLUMN_ORDERING, i.PARENT_TABLE_NAME, i.IS_UNIQUE, i.IS_NULL_FILTERED, i.INDEX_STATE"\
+              " FROM INFORMATION_SCHEMA.INDEX_COLUMNS c"\
+              " LEFT JOIN INFORMATION_SCHEMA.INDEXES i ON c.TABLE_NAME = i.TABLE_NAME AND i.INDEX_NAME = c.INDEX_NAME"\
+              " WHERE c.TABLE_SCHEMA='' AND c.TABLE_SCHEMA=''"
 
-        if table != "INDEX":
-            sql = sql + " AND TABLE_NAME='{0}';".format(table)
+        if table.upper() != "INDEX":
+            sql = sql + " AND c.TABLE_NAME='{0}' AND i.TABLE_NAME = '{0}'"
+        sql = sql + " ORDER BY c.TABLE_NAME, c.INDEX_NAME ASC, c.ORDINAL_POSITION ASC;"
         return cli.query(sql.format(table))
 
     def help_message(self) -> List[str]:
@@ -300,11 +306,15 @@ def execute(cli, text: str) -> ResultContainer:
     return command.handler(cli, **kwargs)
 
 
+spaces = re.compile(r"\s+")
+
+
 def find(text: str) -> Command:
     if not text:
         raise CommandNotFound
 
     # 1st, search by raw input
+    text = re.sub(spaces, " ", text)
     text = clean(text)
     found = find_command(text)
     if found is not None:
