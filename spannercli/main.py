@@ -6,6 +6,7 @@ from google.cloud import spanner
 from google.cloud.spanner_v1 import enums
 from google.api_core import exceptions as googleExceptions
 from google.api_core.gapic_v1 import client_info
+import click
 from cli_helpers import tabular_output
 from prompt_toolkit import PromptSession
 from prompt_toolkit.lexers import PygmentsLexer
@@ -20,6 +21,7 @@ from prompt_toolkit.layout.processors import (HighlightMatchingBracketProcessor,
                                               ConditionalProcessor)
 from pygments.styles import get_style_by_name
 
+from spannercli import __version__
 from spannercli import config, commands, structures, lexer, queryutils
 from spannercli.completion import SQLCompleter
 
@@ -302,8 +304,8 @@ class SpannerCli(object):
             sys.exit(1)
 
 
-def is_batch(options):
-    return options.execute is not None or not sys.stdin.isatty()
+def is_batch(execute):
+    return execute is not None or not sys.stdin.isatty()
 
 
 def initialize_logger(debug=False):
@@ -324,23 +326,42 @@ def initialize_logger(debug=False):
     logger.debug('Initialized the logger for debug')
 
 
-def main():
-    parser = config.create_option_parser()
-    options = parser.parse_args()
-    initialize_logger(options.debug)
-    if is_batch(options):
+@click.command()
+@click.option("-p", "--project", envvar=config.EnvironmentVariables.GCP_PROJECT, required=True,
+              help="Google Cloud Platform Project for spanner. ${GCP_PROJECT}")
+@click.option("-i", "--instance", envvar=config.EnvironmentVariables.SPANNER_INSTANCE_ID, required=True,
+              help="Google Cloud Spanner instance to connect. ${SPANNER_INSTANCE_ID}")
+@click.option("-d", "--database", envvar=config.EnvironmentVariables.SPANNER_DATABASE, required=True,
+              help="Google Cloud Spanner Database to connect. ${SPANNER_DATABASE}")
+@click.option("-c", "--credential", envvar=config.EnvironmentVariables.GOOGLE_APPLICATION_CREDENTIALS,
+              type=click.Path(exists=True),
+              help="path to credential file for Google Cloud Platform. ${GOOGLE_APPLICATION_CREDENTIALS}")
+@click.option("-e", "--execute", help="Execute command and quit.")
+@click.option("-v", "--version", is_flag=True, help="show version.")
+@click.option("--debug", help="Debug mode.", is_flag=True)
+def main(project, instance, database, credential, execute, version, debug):
+    """A Google Cloud Spanner terminal client with auto-completion and syntax highlighting.
+
+    https://github.com/shoma/spanner-cli
+    """
+    if version:
+        print('spanner-cli:', __version__)
+        sys.exit(0)
+    initialize_logger(debug)
+    batch_mode = is_batch(execute)
+    if batch_mode:
         inp = posix_pipe.PosixPipeInput()
     else:
         inp = None
     cli = SpannerCli(
-        project=options.project,
-        instance=options.instance,
-        database=options.database,
-        credentials=config.resolve_credential(options),
+        project=project,
+        instance=instance,
+        database=database,
+        credentials=config.resolve_credential(credential),
         inp=inp
     )
-    if is_batch(options):
-        cli.batch(options.execute)
+    if batch_mode:
+        cli.batch(execute)
         sys.exit(0)
     cli.run()
 

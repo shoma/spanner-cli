@@ -5,7 +5,7 @@ here = path.abspath(path.dirname(__file__))
 
 about = {}
 
-with open(path.join(here, "spannercli", "__version__.py")) as f:
+with open(path.join(here, "spannercli", "__init__.py")) as f:
     exec(f.read(), about)
 
 setup(

@@ -2,6 +2,17 @@
 
 
 class EnvironmentVariables(object):
+    """EnvironmentVariables is a holder that have environment variables names affects spanner-cli"""
+
+    """str: Google Cloud Project ID"""
+    GCP_PROJECT = "GCP_PROJECT"
+
+    """str: Spanner instance id to connect"""
+    SPANNER_INSTANCE_ID = "SPANNER_INSTANCE_ID"
+
+    """str: Spanner database name to connect"""
+    SPANNER_DATABASE = "SPANNER_DATABASE"
+
     """str: path to Google Project Credential file
     https://cloud.google.com/docs/authentication/getting-started
     """
