@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import warnings
 
 from google.cloud import spanner
 from google.cloud.spanner_v1 import enums
@@ -37,11 +38,18 @@ class SpannerCli(object):
         self.logger = logging.getLogger('spanner-cli')
         self.logger.debug("Staring spanner-cli project=%s, instance=%s, database=%s", project, instance, database)
         self.project = project
-        self.client = spanner.Client(
-            project=self.project,
-            credentials=credentials,
-            client_info=client_info.ClientInfo(user_agent=__name__)
-        )
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
+            self.client = spanner.Client(
+                project=self.project,
+                credentials=credentials,
+                client_info=client_info.ClientInfo(user_agent=__name__)
+            )
+            if len(warns) > 0:
+                for w in warns:
+                    self.logger.debug(w)
+                    click.echo(message=w.message, err=True, nl=True)
+
         self.instance = self.client.instance(instance)
         self.database = self.instance.database(database)
         self.prompt_message = self.get_prompt_message()
