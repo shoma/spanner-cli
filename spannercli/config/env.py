@@ -35,3 +35,13 @@ class EnvironmentVariables(object):
     path to query history file, default is `~/.spanner-cli-history` defined as Constants.HISTORY_FILE
     """
     HISTORY_FILE = "SPANNER_CLI_HISTORY"
+
+    """
+    A pager cmd to use, default is /bin/less
+    """
+    PAGER = "PAGER"
+
+    """
+    Options which are passed to less automatically. default is "-RXF" defined as Constants.LESS_FLAG
+    """
+    LESS = "LESS"

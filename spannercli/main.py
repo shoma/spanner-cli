@@ -34,7 +34,13 @@ class SpannerCli(object):
     project = None
     history = None
 
-    def __init__(self, project=None, instance=None, database=None, credentials=None, inp=None, output=None):
+    def __init__(self, project=None, instance=None, database=None, credentials=None, disable_pager=False,
+                 inp=None, output=None):
+        # setup environment variables
+        # less option for pager
+        if not os.environ.get(config.EnvironmentVariables.LESS):
+            os.environ[config.EnvironmentVariables.LESS] = config.Constants.LESS_FLAG
+        self.disable_pager = disable_pager
         self.logger = logging.getLogger('spanner-cli')
         self.logger.debug("Staring spanner-cli project=%s, instance=%s, database=%s", project, instance, database)
         self.project = project
@@ -148,25 +154,30 @@ class SpannerCli(object):
             header = []
             for h in result_set.fields:
                 header.append(h.name)
-            # stats.query_stats
-            # {
-            # 'elapsed_time': string_value: "0.91 msecs",
-            # 'query_text': string_value: "select 1;"
-            # 'rows_scanned': string_value: "0",
-            # 'rows_returned': string_value: "1",
-            # 'cpu_time': string_value: "0.23 msecs",
-            # 'runtime_creation_time': string_value: "0 msecs",
-            # 'query_plan_creation_time': string_value: "0.23 msecs"
-            # }
-            meta['message'] = "rows_returned: {returned:,}, " \
-                              "scanned: {scanned:}, " \
-                              "elapsed_time: {elapsed}, " \
-                              "cpu_time:{cpu}".format(
-                                  returned=int(result_set.stats.query_stats['rows_returned']),
-                                  scanned=int(result_set.stats.query_stats['rows_scanned']),
-                                  elapsed=result_set.stats.query_stats['elapsed_time'],
-                                  cpu=result_set.stats.query_stats['cpu_time'],
-                              )
+            message = ""
+            if result_set.stats:
+                # stats.query_stats
+                # {
+                #   'elapsed_time': string_value: "0.91 msecs",
+                #   'query_text': string_value: "select 1;"
+                #   'rows_scanned': string_value: "0",
+                #   'rows_returned': string_value: "1",
+                #   'cpu_time': string_value: "0.23 msecs",
+                #   'runtime_creation_time': string_value: "0 msecs",
+                #   'query_plan_creation_time': string_value: "0.23 msecs"
+                # }
+                message = "rows_returned: {returned:,}, " \
+                                  "scanned: {scanned:}, " \
+                                  "elapsed_time: {elapsed}, " \
+                                  "cpu_time:{cpu}".format(
+                                      returned=int(result_set.stats.query_stats['rows_returned']),
+                                      scanned=int(result_set.stats.query_stats['rows_scanned']),
+                                      elapsed=result_set.stats.query_stats['elapsed_time'],
+                                      cpu=result_set.stats.query_stats['cpu_time'],
+                                  )
+            if count > limit and message == "":
+                message = f"returns over limit: {limit}, aborted to read all results, stats is not available."
+            meta['message'] = message
 
         return structures.ResultContainer(
             data=data,
@@ -263,7 +274,7 @@ class SpannerCli(object):
             self.logger.exception(e)
             return
         except Exception as e:  # pylint: disable=broad-except
-            click.secho(message="\n" + e + "\n", err=True, nl=True, fg="red")
+            click.secho(message="\n" + str(e) + "\n", err=True, nl=True, fg="red")
             self.logger.exception(e)
 
     def output(self, result: structures.ResultContainer):
@@ -280,8 +291,13 @@ class SpannerCli(object):
 
             formatted = self.formatter.format_output(
                 result.data, result.header, **opt)
-            for n in formatted:
-                print(n)
+            term_size = self.session.app.output.get_size()
+            if not self.disable_pager and len(result.data)+1 > term_size.rows:
+                self.logger.debug(term_size)
+                click.echo_via_pager(formatted)
+            else:
+                for n in formatted:
+                    click.secho(n)
         result.print_message()
 
     def run(self):
@@ -359,19 +375,24 @@ def main(project, instance, database, credential, execute, version, debug):
     initialize_logger(debug)
     batch_mode = is_batch(execute)
     if batch_mode:
-        inp = posix_pipe.PosixPipeInput()
-    else:
-        inp = None
+        cli = SpannerCli(
+            project=project,
+            instance=instance,
+            database=database,
+            credentials=config.resolve_credential(credential),
+            disable_pager=batch_mode,
+            inp=posix_pipe.PosixPipeInput()
+        )
+        cli.batch(execute)
+        sys.exit(0)
+
     cli = SpannerCli(
         project=project,
         instance=instance,
         database=database,
         credentials=config.resolve_credential(credential),
-        inp=inp
+        disable_pager=batch_mode,
     )
-    if batch_mode:
-        cli.batch(execute)
-        sys.exit(0)
     cli.run()
 
 
