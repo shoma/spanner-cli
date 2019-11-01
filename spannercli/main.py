@@ -258,11 +258,12 @@ class SpannerCli(object):
             self.output(result)
             return
         except googleExceptions.GoogleAPICallError as e:
-            print("\n", bytes(e.message, "utf8").decode("unicode_escape"), "\n")
+            message = "\n" + bytes(e.message, "utf8").decode("unicode_escape") + "\n"
+            click.secho(message=message, err=True, nl=True, fg="red")
             self.logger.exception(e)
             return
         except Exception as e:  # pylint: disable=broad-except
-            print("\n", e, "\n")
+            click.secho(message="\n" + e + "\n", err=True, nl=True, fg="red")
             self.logger.exception(e)
 
     def output(self, result: structures.ResultContainer):
