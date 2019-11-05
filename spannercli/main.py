@@ -34,13 +34,13 @@ class SpannerCli(object):
     project = None
     history = None
 
-    def __init__(self, project=None, instance=None, database=None, credentials=None, disable_pager=False,
+    def __init__(self, project=None, instance=None, database=None, credentials=None, with_pager=False,
                  inp=None, output=None):
         # setup environment variables
         # less option for pager
         if not os.environ.get(config.EnvironmentVariables.LESS):
             os.environ[config.EnvironmentVariables.LESS] = config.Constants.LESS_FLAG
-        self.disable_pager = disable_pager
+        self.with_pager = with_pager
         self.logger = logging.getLogger('spanner-cli')
         self.logger.debug("Staring spanner-cli project=%s, instance=%s, database=%s", project, instance, database)
         self.project = project
@@ -291,9 +291,7 @@ class SpannerCli(object):
 
             formatted = self.formatter.format_output(
                 result.data, result.header, **opt)
-            term_size = self.session.app.output.get_size()
-            if not self.disable_pager and len(result.data)+1 > term_size.rows:
-                self.logger.debug(term_size)
+            if self.with_pager:
                 click.echo_via_pager(formatted)
             else:
                 for n in formatted:
@@ -321,10 +319,12 @@ class SpannerCli(object):
             self.output(result)
             return
         except googleExceptions.InvalidArgument as e:
+            message = "\n" + bytes(e.message, "utf8").decode("unicode_escape") + "\n"
+            click.secho(message=message, err=True, nl=True)
             self.logger.exception(e)
-            print("\n", e, "\n")
             sys.exit(1)
         except Exception as e:  # pylint: disable=broad-except
+            click.secho(message="\n" + str(e) + "\n", err=True, nl=True)
             self.logger.exception(e)
             sys.exit(1)
 
@@ -361,10 +361,12 @@ def initialize_logger(debug=False):
 @click.option("-c", "--credential", envvar=config.EnvironmentVariables.GOOGLE_APPLICATION_CREDENTIALS,
               type=click.Path(exists=True),
               help="path to credential file for Google Cloud Platform. ${GOOGLE_APPLICATION_CREDENTIALS}")
+@click.option('--pager/--no-pager', default=False,
+              help="use ${PAGER} (default LESS) to print output.")
 @click.option("-e", "--execute", help="Execute command and quit.")
 @click.option("-v", "--version", is_flag=True, help="show version.")
 @click.option("--debug", help="Debug mode.", is_flag=True)
-def main(project, instance, database, credential, execute, version, debug):
+def main(project, instance, database, credential, pager, execute, version, debug):
     """A Google Cloud Spanner terminal client with auto-completion and syntax highlighting.
 
     https://github.com/shoma/spanner-cli
@@ -380,7 +382,6 @@ def main(project, instance, database, credential, execute, version, debug):
             instance=instance,
             database=database,
             credentials=config.resolve_credential(credential),
-            disable_pager=batch_mode,
             inp=posix_pipe.PosixPipeInput()
         )
         cli.batch(execute)
@@ -391,7 +392,7 @@ def main(project, instance, database, credential, execute, version, debug):
         instance=instance,
         database=database,
         credentials=config.resolve_credential(credential),
-        disable_pager=batch_mode,
+        with_pager=pager,
     )
     cli.run()
 
