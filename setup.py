@@ -5,12 +5,12 @@ here = path.abspath(path.dirname(__file__))
 
 about = {}
 
-with open(path.join(here, "spannercli", "__version__.py")) as f:
+with open(path.join(here, "spannercli", "__init__.py")) as f:
     exec(f.read(), about)
 
 setup(
     name="spanner-cli",
-    version=about["version"],
+    version=about["__version__"],
     url="https://github.com/shoma/spanner-cli",
     packages=find_packages(exclude=["tests", "tests.*", "tasks", "tasks.*"]),
     entry_points={

@@ -1,11 +1,13 @@
 import logging
 import os
 import sys
+import warnings
 
 from google.cloud import spanner
 from google.cloud.spanner_v1 import enums
 from google.api_core import exceptions as googleExceptions
 from google.api_core.gapic_v1 import client_info
+import click
 from cli_helpers import tabular_output
 from prompt_toolkit import PromptSession
 from prompt_toolkit.lexers import PygmentsLexer
@@ -20,6 +22,7 @@ from prompt_toolkit.layout.processors import (HighlightMatchingBracketProcessor,
                                               ConditionalProcessor)
 from pygments.styles import get_style_by_name
 
+from spannercli import __version__
 from spannercli import config, commands, structures, lexer, queryutils
 from spannercli.completion import SQLCompleter
 
@@ -31,15 +34,28 @@ class SpannerCli(object):
     project = None
     history = None
 
-    def __init__(self, project=None, instance=None, database=None, credentials=None, inp=None, output=None):
+    def __init__(self, project=None, instance=None, database=None, credentials=None, with_pager=False,
+                 inp=None, output=None):
+        # setup environment variables
+        # less option for pager
+        if not os.environ.get(config.EnvironmentVariables.LESS):
+            os.environ[config.EnvironmentVariables.LESS] = config.Constants.LESS_FLAG
+        self.with_pager = with_pager
         self.logger = logging.getLogger('spanner-cli')
         self.logger.debug("Staring spanner-cli project=%s, instance=%s, database=%s", project, instance, database)
         self.project = project
-        self.client = spanner.Client(
-            project=self.project,
-            credentials=credentials,
-            client_info=client_info.ClientInfo(user_agent=__name__)
-        )
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
+            self.client = spanner.Client(
+                project=self.project,
+                credentials=credentials,
+                client_info=client_info.ClientInfo(user_agent=__name__)
+            )
+            if len(warns) > 0:
+                for w in warns:
+                    self.logger.debug(w)
+                    click.echo(message=w.message, err=True, nl=True)
+
         self.instance = self.client.instance(instance)
         self.database = self.instance.database(database)
         self.prompt_message = self.get_prompt_message()
@@ -138,25 +154,30 @@ class SpannerCli(object):
             header = []
             for h in result_set.fields:
                 header.append(h.name)
-            # stats.query_stats
-            # {
-            # 'elapsed_time': string_value: "0.91 msecs",
-            # 'query_text': string_value: "select 1;"
-            # 'rows_scanned': string_value: "0",
-            # 'rows_returned': string_value: "1",
-            # 'cpu_time': string_value: "0.23 msecs",
-            # 'runtime_creation_time': string_value: "0 msecs",
-            # 'query_plan_creation_time': string_value: "0.23 msecs"
-            # }
-            meta['message'] = "rows_returned: {returned:,}, " \
-                              "scanned: {scanned:}, " \
-                              "elapsed_time: {elapsed}, " \
-                              "cpu_time:{cpu}".format(
-                                  returned=int(result_set.stats.query_stats['rows_returned']),
-                                  scanned=int(result_set.stats.query_stats['rows_scanned']),
-                                  elapsed=result_set.stats.query_stats['elapsed_time'],
-                                  cpu=result_set.stats.query_stats['cpu_time'],
-                              )
+            message = ""
+            if result_set.stats:
+                # stats.query_stats
+                # {
+                #   'elapsed_time': string_value: "0.91 msecs",
+                #   'query_text': string_value: "select 1;"
+                #   'rows_scanned': string_value: "0",
+                #   'rows_returned': string_value: "1",
+                #   'cpu_time': string_value: "0.23 msecs",
+                #   'runtime_creation_time': string_value: "0 msecs",
+                #   'query_plan_creation_time': string_value: "0.23 msecs"
+                # }
+                message = "rows_returned: {returned:,}, " \
+                                  "scanned: {scanned:}, " \
+                                  "elapsed_time: {elapsed}, " \
+                                  "cpu_time:{cpu}".format(
+                                      returned=int(result_set.stats.query_stats['rows_returned']),
+                                      scanned=int(result_set.stats.query_stats['rows_scanned']),
+                                      elapsed=result_set.stats.query_stats['elapsed_time'],
+                                      cpu=result_set.stats.query_stats['cpu_time'],
+                                  )
+            if count > limit and message == "":
+                message = f"returns over limit: {limit}, aborted to read all results, stats is not available."
+            meta['message'] = message
 
         return structures.ResultContainer(
             data=data,
@@ -248,11 +269,12 @@ class SpannerCli(object):
             self.output(result)
             return
         except googleExceptions.GoogleAPICallError as e:
-            print("\n", bytes(e.message, "utf8").decode("unicode_escape"), "\n")
+            message = "\n" + bytes(e.message, "utf8").decode("unicode_escape") + "\n"
+            click.secho(message=message, err=True, nl=True, fg="red")
             self.logger.exception(e)
             return
         except Exception as e:  # pylint: disable=broad-except
-            print("\n", e, "\n")
+            click.secho(message="\n" + str(e) + "\n", err=True, nl=True, fg="red")
             self.logger.exception(e)
 
     def output(self, result: structures.ResultContainer):
@@ -269,8 +291,11 @@ class SpannerCli(object):
 
             formatted = self.formatter.format_output(
                 result.data, result.header, **opt)
-            for n in formatted:
-                print(n)
+            if self.with_pager:
+                click.echo_via_pager(formatted)
+            else:
+                for n in formatted:
+                    click.secho(n)
         result.print_message()
 
     def run(self):
@@ -294,16 +319,18 @@ class SpannerCli(object):
             self.output(result)
             return
         except googleExceptions.InvalidArgument as e:
+            message = "\n" + bytes(e.message, "utf8").decode("unicode_escape") + "\n"
+            click.secho(message=message, err=True, nl=True)
             self.logger.exception(e)
-            print("\n", e, "\n")
             sys.exit(1)
         except Exception as e:  # pylint: disable=broad-except
+            click.secho(message="\n" + str(e) + "\n", err=True, nl=True)
             self.logger.exception(e)
             sys.exit(1)
 
 
-def is_batch(options):
-    return options.execute is not None or not sys.stdin.isatty()
+def is_batch(execute):
+    return execute is not None or not sys.stdin.isatty()
 
 
 def initialize_logger(debug=False):
@@ -324,26 +351,51 @@ def initialize_logger(debug=False):
     logger.debug('Initialized the logger for debug')
 
 
-def main():
-    parser = config.create_option_parser()
-    options = parser.parse_args()
-    initialize_logger(options.debug)
-    if is_batch(options):
-        inp = posix_pipe.PosixPipeInput()
-    else:
-        inp = None
-    cli = SpannerCli(
-        project=options.project,
-        instance=options.instance,
-        database=options.database,
-        credentials=config.resolve_credential(options),
-        inp=inp
-    )
-    if is_batch(options):
-        cli.batch(options.execute)
+@click.command()
+@click.option("-p", "--project", envvar=config.EnvironmentVariables.GCP_PROJECT, required=True,
+              help="Google Cloud Platform Project for spanner. ${GCP_PROJECT}")
+@click.option("-i", "--instance", envvar=config.EnvironmentVariables.SPANNER_INSTANCE_ID, required=True,
+              help="Google Cloud Spanner instance to connect. ${SPANNER_INSTANCE_ID}")
+@click.option("-d", "--database", envvar=config.EnvironmentVariables.SPANNER_DATABASE, required=True,
+              help="Google Cloud Spanner Database to connect. ${SPANNER_DATABASE}")
+@click.option("-c", "--credential", envvar=config.EnvironmentVariables.GOOGLE_APPLICATION_CREDENTIALS,
+              type=click.Path(exists=True),
+              help="path to credential file for Google Cloud Platform. ${GOOGLE_APPLICATION_CREDENTIALS}")
+@click.option('--pager/--no-pager', default=False,
+              help="use ${PAGER} (default LESS) to print output.")
+@click.option("-e", "--execute", help="Execute command and quit.")
+@click.option("-v", "--version", is_flag=True, help="show version.")
+@click.option("--debug", help="Debug mode.", is_flag=True)
+def main(project, instance, database, credential, pager, execute, version, debug):
+    """A Google Cloud Spanner terminal client with auto-completion and syntax highlighting.
+
+    https://github.com/shoma/spanner-cli
+    """
+    if version:
+        print('spanner-cli:', __version__)
         sys.exit(0)
+    initialize_logger(debug)
+    batch_mode = is_batch(execute)
+    if batch_mode:
+        cli = SpannerCli(
+            project=project,
+            instance=instance,
+            database=database,
+            credentials=config.resolve_credential(credential),
+            inp=posix_pipe.PosixPipeInput()
+        )
+        cli.batch(execute)
+        sys.exit(0)
+
+    cli = SpannerCli(
+        project=project,
+        instance=instance,
+        database=database,
+        credentials=config.resolve_credential(credential),
+        with_pager=pager,
+    )
     cli.run()
 
 
 if __name__ == '__main__':
-    main()
+    main()  # pylint: disable=no-value-for-parameter

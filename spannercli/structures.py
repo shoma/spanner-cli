@@ -10,7 +10,7 @@ class ResultContainer(object):
     def print_message(self):
         message = self.meta.get('message', None)
         if message is not None:
-            print(message, "\n")
+            print("\n", message, "\n", sep="")
 
     def format(self):
         return self.meta.get('format', None)
