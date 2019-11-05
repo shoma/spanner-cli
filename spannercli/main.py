@@ -292,7 +292,7 @@ class SpannerCli(object):
             formatted = self.formatter.format_output(
                 result.data, result.header, **opt)
             if self.with_pager:
-                click.echo_via_pager(formatted)
+                click.echo_via_pager("\n".join(list(formatted)))
             else:
                 for n in formatted:
                     click.secho(n)
