@@ -57,5 +57,5 @@ And, you can also edit query with readline's keybindings.
 see https://readline.kablamo.org/emacs.html
 
 ### Note
-- build on top of [prompt\-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit)
-- inspired by [dbcli](https://github.com/dbcli)
+- build on top of [prompt\-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit), [pallets/click](https://github.com/pallets/click)
+- inspired by [dbcli](https://github.com/dbcli), [yfuruyama/spanner\-cli](https://github.com/yfuruyama/spanner-cli)
