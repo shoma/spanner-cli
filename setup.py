@@ -10,7 +10,7 @@ with open(path.join(here, "spannercli", "__init__.py")) as f:
 
 setup(
     name="spanner-cli",
-    version=about["version"],
+    version=about["__version__"],
     url="https://github.com/shoma/spanner-cli",
     packages=find_packages(exclude=["tests", "tests.*", "tasks", "tasks.*"]),
     entry_points={

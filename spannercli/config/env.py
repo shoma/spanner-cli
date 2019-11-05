@@ -4,44 +4,44 @@
 class EnvironmentVariables(object):
     """EnvironmentVariables is a holder that have environment variables names affects spanner-cli"""
 
-    """str: Google Cloud Project ID"""
     GCP_PROJECT = "GCP_PROJECT"
+    """Google Cloud Project ID"""
 
-    """str: Spanner instance id to connect"""
     SPANNER_INSTANCE_ID = "SPANNER_INSTANCE_ID"
+    """Spanner instance id to connect"""
 
-    """str: Spanner database name to connect"""
     SPANNER_DATABASE = "SPANNER_DATABASE"
+    """Spanner database name to connect"""
 
-    """str: path to Google Project Credential file
+    GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS"
+    """path to Google Project Credential file
     https://cloud.google.com/docs/authentication/getting-started
     """
-    GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS"
 
-    """str: Possible color depth values for the output.
+    PROMPT_TOOLKIT_COLOR_DEPTH = "PROMPT_TOOLKIT_COLOR_DEPTH"
+    """Possible color depth values for the output.
     [DEPTH_1_BIT,DEPTH_4_BIT,DEPTH_8_BIT,DEPTH_24_BIT]
     DEPTH_8_BIT is default.
     prompt_toolkit/output/color_depth.py
     """
-    PROMPT_TOOLKIT_COLOR_DEPTH = "PROMPT_TOOLKIT_COLOR_DEPTH"
 
-    """str: Default gRPC logging verbosity
+    GRPC_VERBOSITY = "GRPC_VERBOSITY"
+    """Default gRPC logging verbosity
     [DEBUG, INFO, ERROR]
     https://github.com/grpc/grpc/blob/master/doc/environment_variables.md#GRPC_VERBOSITY
     """
-    GRPC_VERBOSITY = "GRPC_VERBOSITY"
 
+    HISTORY_FILE = "SPANNER_CLI_HISTORY"
     """
     path to query history file, default is `~/.spanner-cli-history` defined as Constants.HISTORY_FILE
     """
-    HISTORY_FILE = "SPANNER_CLI_HISTORY"
 
+    PAGER = "PAGER"
     """
     A pager cmd to use, default is /bin/less
     """
-    PAGER = "PAGER"
 
+    LESS = "LESS"
     """
     Options which are passed to less automatically. default is "-RXF" defined as Constants.LESS_FLAG
     """
-    LESS = "LESS"

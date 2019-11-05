@@ -398,4 +398,4 @@ def main(project, instance, database, credential, pager, execute, version, debug
 
 
 if __name__ == '__main__':
-    main()
+    main()  # pylint: disable=no-value-for-parameter
