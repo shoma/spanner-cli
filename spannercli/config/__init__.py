@@ -1,4 +1,3 @@
-from argparse import Namespace
 from google.oauth2 import service_account
 
 from .constant import Constants
