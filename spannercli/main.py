@@ -361,7 +361,7 @@ def initialize_logger(debug=False):
 @click.option("-c", "--credential", envvar=config.EnvironmentVariables.GOOGLE_APPLICATION_CREDENTIALS,
               type=click.Path(exists=True),
               help="path to credential file for Google Cloud Platform. ${GOOGLE_APPLICATION_CREDENTIALS}")
-@click.option('--pager/--no-pager', default=False,
+@click.option('--pager/--no-pager', default=False, show_default=True,
               help="use ${PAGER} (default LESS) to print output.")
 @click.option("-e", "--execute", help="Execute command and quit.")
 @click.option("-v", "--version", is_flag=True, help="show version.")

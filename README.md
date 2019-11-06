@@ -16,26 +16,28 @@ pip3 install -U --user git+https://github.com/shoma/spanner-cli
 
 ### Usage
 ```
-usage: spanner-cli [-h] -p PROJECT -i INSTANCE [-d DATABASE] [-c CREDENTIAL]
-                   [-e EXECUTE]
+Usage: spanner-cli [OPTIONS]
 
-A Google Cloud Spanner terminal client with auto-completion and syntax
-highlighting.
+  A Google Cloud Spanner terminal client with auto-completion and syntax
+  highlighting.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -p PROJECT, --project PROJECT
-                        Google Cloud Platform Project for spanner.
-  -i INSTANCE, --instance INSTANCE
-                        Google Cloud Spanner instance to connect.
-  -d DATABASE, --database DATABASE
-                        Google Cloud Spanner Database to connect.
-  -c CREDENTIAL, --credential CREDENTIAL
-                        path to credential file for Google Cloud Platform.
-  -e EXECUTE, --execute EXECUTE
-                        Execute command and quit.
+  https://github.com/shoma/spanner-cli
 
-https://github.com/shoma/spanner-cli
+Options:
+  -p, --project TEXT     Google Cloud Platform Project for spanner.
+                         ${GCP_PROJECT}  [required]
+  -i, --instance TEXT    Google Cloud Spanner instance to connect.
+                         ${SPANNER_INSTANCE_ID}  [required]
+  -d, --database TEXT    Google Cloud Spanner Database to connect.
+                         ${SPANNER_DATABASE}  [required]
+  -c, --credential PATH  path to credential file for Google Cloud Platform.
+                         ${GOOGLE_APPLICATION_CREDENTIALS}
+  --pager / --no-pager   use ${PAGER} (default LESS) to print output.
+                         [default: False]
+  -e, --execute TEXT     Execute command and quit.
+  -v, --version          show version.
+  --debug                Debug mode.
+  --help                 Show this message and exit.
 ```
 
 ```
