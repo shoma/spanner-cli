@@ -136,7 +136,7 @@ class SpannerCli(object):
 
     def read_query(self, sql) -> structures.ResultContainer:
         meta = {}
-        if sql.endswith('\\G'):
+        if sql.strip().endswith('\\G'):
             meta['format'] = 'vertical'
             sql = sql[:-2]
 
