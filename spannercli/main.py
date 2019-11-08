@@ -5,7 +5,7 @@ import warnings
 
 from google.cloud import spanner
 from google.cloud.spanner_v1 import enums
-from google.api_core import exceptions as googleExceptions
+from google.api_core import exceptions as api_exceptions
 from google.api_core.gapic_v1 import client_info
 import click
 from cli_helpers import tabular_output
@@ -49,7 +49,7 @@ class SpannerCli(object):
             self.client = spanner.Client(
                 project=self.project,
                 credentials=credentials,
-                client_info=client_info.ClientInfo(user_agent=__name__)
+                client_info=client_info.ClientInfo(user_agent=__name__),
             )
             if len(warns) > 0:
                 for w in warns:
@@ -89,10 +89,7 @@ class SpannerCli(object):
         self.set_completion_columns()
 
     def set_completion_databases(self):
-        data = []
-        databases = self.instance.list_databases()
-        for d in databases:
-            data.append(d.database_id)
+        data = self.list_databases()
         self.completer.set_databases(data)
 
     def set_completion_tables(self):
@@ -121,6 +118,17 @@ class SpannerCli(object):
 
     def get_prompt_message(self) -> str:
         return f"Spanner [{self.project}/{self.instance.display_name}/{self.database.database_id}]:\n> "
+
+    def list_databases(self):
+        data = []
+        try:
+            databases = self.instance.list_databases()
+            for d in databases:
+                data.append(d.database_id)
+        except api_exceptions.GoogleAPIError as e:
+            # google.api_core.exceptions.PermissionDenied, if does not have sufficient permission
+            self.logger.exception(e)
+        return data
 
     def change_database(self, dbname):
         self.database = self.instance.database(dbname)
@@ -254,11 +262,16 @@ class SpannerCli(object):
             if result is not None:
                 self.output(result)
             return
+        except api_exceptions.GoogleAPIError as e:
+            self.logger.exception(e)
+            print("\n", e, "\n")
+            return
         except EOFError as e:
+            self.logger.exception(e)
             raise e
         except commands.CommandError as e:
-            print("\n", e, "\n")
             self.logger.exception(e)
+            print("\n", e, "\n")
             return
         except commands.CommandNotFound:
             pass
@@ -268,7 +281,7 @@ class SpannerCli(object):
             result = self.query(text)
             self.output(result)
             return
-        except googleExceptions.GoogleAPICallError as e:
+        except api_exceptions.GoogleAPICallError as e:
             message = "\n" + bytes(e.message, "utf8").decode("unicode_escape") + "\n"
             click.secho(message=message, err=True, nl=True, fg="red")
             self.logger.exception(e)
@@ -318,7 +331,7 @@ class SpannerCli(object):
             result.meta['message'] = None
             self.output(result)
             return
-        except googleExceptions.InvalidArgument as e:
+        except api_exceptions.InvalidArgument as e:
             message = "\n" + bytes(e.message, "utf8").decode("unicode_escape") + "\n"
             click.secho(message=message, err=True, nl=True)
             self.logger.exception(e)

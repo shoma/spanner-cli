@@ -4,7 +4,7 @@ from typing import List, Optional
 import re
 import webbrowser
 
-from google.api_core import exceptions as googleExceptions
+from google.api_core import exceptions as api_exceptions
 from .structures import ResultContainer
 from .queryutils import clean, find_last_word
 
@@ -125,7 +125,7 @@ class ChangeDatabase(Command):
 
         try:
             cli.query("SELECT 1")
-        except googleExceptions.NotFound as e:
+        except api_exceptions.NotFound as e:
             # rollback to current if not found
             cli.change_database(current_id)
             raise CommandError(e)
@@ -233,10 +233,9 @@ class ListDatabaseCommand(Command):
 
     def handler(self, cli, **kwargs) -> Optional[ResultContainer]:
         data = []
-        databases = cli.instance.list_databases()
-        for d in databases:
-            data.append([d.database_id])
-
+        databases = cli.list_databases()
+        if len(databases) > 0:
+            data = [[n] for n in databases]
         return ResultContainer(data=data, header=["Databases"])
 
     def help_message(self) -> List[str]:
