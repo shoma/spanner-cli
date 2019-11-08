@@ -24,7 +24,7 @@ jobs:
         pipenv install --dev
     - name: Lint with pylint
       run: |
-        pipenv run pylint --verbose --reports=y
+        pipenv run pylint --rcfile=.pylintrc --verbose --reports=y
     - name: Test with pytest
       run: |
         pipenv run test  --verbose

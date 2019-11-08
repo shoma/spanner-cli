@@ -167,14 +167,14 @@ class SpannerCli(object):
                 #   'query_plan_creation_time': string_value: "0.23 msecs"
                 # }
                 message = "rows_returned: {returned:,}, " \
-                                  "scanned: {scanned:}, " \
-                                  "elapsed_time: {elapsed}, " \
-                                  "cpu_time:{cpu}".format(
-                                      returned=int(result_set.stats.query_stats['rows_returned']),
-                                      scanned=int(result_set.stats.query_stats['rows_scanned']),
-                                      elapsed=result_set.stats.query_stats['elapsed_time'],
-                                      cpu=result_set.stats.query_stats['cpu_time'],
-                                  )
+                    "scanned: {scanned:}, " \
+                    "elapsed_time: {elapsed}, " \
+                    "cpu_time:{cpu}".format(
+                        returned=int(result_set.stats.query_stats['rows_returned']),
+                        scanned=int(result_set.stats.query_stats['rows_scanned']),
+                        elapsed=result_set.stats.query_stats['elapsed_time'],
+                        cpu=result_set.stats.query_stats['cpu_time'],
+                    )
             if count > limit and message == "":
                 message = f"returns over limit: {limit}, aborted to read all results, stats is not available."
             meta['message'] = message
