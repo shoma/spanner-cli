@@ -245,7 +245,7 @@ class SpannerCli(object):
             **meta
         )
 
-    def interact(self):
+    def interact(self):  # pylint: disable=too-many-return-statements
         try:
             text = self.session.prompt(self.prompt_message)
         except KeyboardInterrupt:
