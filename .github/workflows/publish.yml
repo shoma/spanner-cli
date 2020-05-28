@@ -1,11 +1,11 @@
-name: Release to PyPI
+name: Publish to PyPI
 
 on:
   release:
-    types: [created]
+    types: [ published ]
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -20,7 +20,9 @@ jobs:
     - name: Build and publish
       env:
         TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        #TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_TOKEN }}
+      run: sed -i "s/__DEV__/${{ github.event.release.tag_name }}/g" spannercli/__init__.py
       run: |
         python setup.py sdist bdist_wheel
-        twine upload dist/*
+        twine --repository testpypi upload dist/*
