@@ -26,5 +26,6 @@ jobs:
         pipenv run pylint --rcfile=.pylintrc --verbose --reports=y
     - name: Test with pytest
       run: |
+        pipenv run pip install importlib_metadata
         pipenv run pip list
         pipenv run test --verbose
