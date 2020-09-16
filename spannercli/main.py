@@ -66,7 +66,7 @@ class SpannerCli(object):
             message=self.prompt_message,
             lexer=PygmentsLexer(lexer.SpannerLexer),
             completer=DynamicCompleter(lambda: self.completer),
-            style=style_from_pygments_cls(get_style_by_name(config.Constants.PYGMENT_STYLE)),
+            style=style_from_pygments_cls(get_style_by_name(config.get_pygment_style())),
             history=self.history,
             auto_suggest=AutoSuggestFromHistory(),
             input_processors=[ConditionalProcessor(
