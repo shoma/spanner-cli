@@ -128,7 +128,7 @@ class ChangeDatabase(Command):
         except api_exceptions.NotFound as e:
             # rollback to current if not found
             cli.change_database(current_id)
-            raise CommandError(e)
+            raise CommandError(e) from e
 
         meta = dict(message="change database to {0}".format(dbname))
         return ResultContainer(data=[], header=[], **meta)
