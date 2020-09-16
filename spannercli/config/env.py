@@ -45,3 +45,9 @@ class EnvironmentVariables(object):
     """
     Options which are passed to less automatically. default is "-RXF" defined as Constants.LESS_FLAG
     """
+
+    PYGMENT_STYLE = "PYGMENT_STYLE"
+    """
+    The builtin styles of PYGMENT. default is Constants.PYGMENT_STYLE
+    see https://pygments.org/docs/styles/
+    """
