@@ -84,11 +84,11 @@
         },
         "google-cloud-spanner": {
             "hashes": [
-                "sha256:3bf47677be6d2d69cec7d948f1220cd1c202459128e7a4f88e7deb99f20188d5",
-                "sha256:d669da9f062ef8d3024c12190b132b6957d2c5c9ef95d31891d0a48147b4d0e4"
+                "sha256:50c375d8224415b7b7cc19a720c745cd8fb49144db50b252d06c42121374312d",
+                "sha256:ff6869e50eb284854fec864fcaa26139c04ded7ed522ae488fff3b08ffc5dc30"
             ],
             "index": "pypi",
-            "version": "==1.19.0"
+            "version": "==1.19.1"
         },
         "googleapis-common-protos": {
             "extras": [
