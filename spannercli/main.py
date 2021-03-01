@@ -4,7 +4,7 @@ import sys
 import warnings
 
 from google.cloud import spanner
-from google.cloud.spanner_v1 import enums
+from google.cloud.spanner_v1 import types
 from google.api_core import exceptions as api_exceptions
 from google.api_core.gapic_v1 import client_info
 import click
@@ -150,7 +150,7 @@ class SpannerCli(object):
 
         with self.database.snapshot() as snapshot:
             result_set = snapshot.execute_sql(sql,
-                                              query_mode=enums.ExecuteSqlRequest.QueryMode.PROFILE)
+                                              query_mode=types.spanner.ExecuteSqlRequest.QueryMode.PROFILE)
             data = []
             limit = config.Constants.MAX_RESULT
             count = 0
