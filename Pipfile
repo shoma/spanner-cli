@@ -10,7 +10,7 @@ autopep8 = "*"
 pylint = "*"
 
 [packages]
-google-cloud-spanner = "*"
+google-cloud-spanner = "~=3.0"
 prompt-toolkit = "*"
 cli-helpers = "*"
 pygments = "*"
