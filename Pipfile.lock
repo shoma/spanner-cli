@@ -40,11 +40,11 @@
         },
         "cli-helpers": {
             "hashes": [
-                "sha256:0ccc1cfcda1ac64dc7ed83d7013055cf19e5979d29e56c21f3b692de01555aae",
-                "sha256:e1a67c6e2cd95857fe50f7640549c65af8df5c4d7666af4e6d8c8ee7dbb694b4"
+                "sha256:2e93cda413052f38042d47b804eea049a4f7860ac9826f3763719288d77435ea",
+                "sha256:e7174d003a2b58fd3e31a73fbbc45d5aa513de62cbd42d437f78b9658bd5f967"
             ],
             "index": "pypi",
-            "version": "==2.2.1"
+            "version": "==2.3.0"
         },
         "click": {
             "hashes": [
